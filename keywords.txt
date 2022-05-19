@@ -1,0 +1,31 @@
+#######################################
+# Syntax Coloring Map For Arduino Music
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Music	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+play	KEYWORD2
+stop	KEYWORD2
+loop	KEYWORD2
+isPlaying	KEYWORD2
+setTempo	KEYWORD2
+setRepeat	KEYWORD2
+setPitchShift	KEYWORD2
+
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+
+#######################################
+# Constants (LITERAL1)
+####################################### 
