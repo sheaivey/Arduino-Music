@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+    <head>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.min.js"></script>
+
+
+    </head>
+    <body>
+        <div id="app">
+            <strong>Tone</strong>
+            <button @click="playSound()">{{!isPlaying ? 'Play' : 'Stop'}}</button>
+            <select v-model="types">
+                <option value="sine">Sine</option>
+                <option value="square">Square</option>
+                <option value="sawtooth">Sawtooth</option>
+                <option value="triangle">Triangle</option>
+            </select>
+            <form>
+                <label for="freq">Frequency</label>
+                <input :disabled="isPlaying" v-model="frequency" type="range" name="freq" value="440" min="0" max="8000" />
+                <input :disabled="isPlaying" v-model="frequency" type="text" value="440" />
+
+            </form>
+            <br />
+            <strong>Song</strong>
+            <button @click="playSong()">{{!isPlaying ? 'Play' : 'Stop'}}</button>
+            <br />
+            Frequency followed by duration tuple.
+            <form>
+
+                Tempo <input v-model="tempo" type="range" name="tempo" value="120" min="50" max="800" /><input
+                    :disabled="isPlaying" v-model="tempo" type="text" value="120" /> <br />
+                <textarea :disabled="isPlaying" v-model="notes" style="width: 100%; height: 600px"> </textarea>
+            </form>
+        </div>
+
+        <script type="text/javascript">
+            new Vue({
+                data() {
+                    return {
+                        oscillator: 0,
+                        isPlaying: false,
+                        types: 'square',
+                        frequency: 440,
+                        tempo: 120,
+                        notes: `
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //1
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //5
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //9
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //13
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_FS3, -16, NOTE_D3, -16, NOTE_B2, -16, NOTE_A3, -16, NOTE_FS3, -16, NOTE_B2, -16, NOTE_D3, -16, NOTE_FS3, -16, NOTE_A3, -16, NOTE_FS3, -16, NOTE_D3, -16, NOTE_B2, -16,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //17
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //21
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_B3, -16, NOTE_G3, -16, NOTE_E3, -16, NOTE_G3, -16, NOTE_B3, -16, NOTE_E4, -16, NOTE_G3, -16, NOTE_B3, -16, NOTE_E4, -16, NOTE_B3, -16, NOTE_G4, -16, NOTE_B4, -16,
+
+NOTE_A2, 8, NOTE_A2, 8, NOTE_A3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_G3, 8, NOTE_A2, 8, NOTE_A2, 8, //25
+NOTE_F3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_DS3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_E3, 8, NOTE_F3, 8,
+NOTE_A2, 8, NOTE_A2, 8, NOTE_A3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_G3, 8, NOTE_A2, 8, NOTE_A2, 8,
+NOTE_F3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_DS3, -2,
+
+NOTE_A2, 8, NOTE_A2, 8, NOTE_A3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_G3, 8, NOTE_A2, 8, NOTE_A2, 8, //29
+NOTE_F3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_DS3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_E3, 8, NOTE_F3, 8,
+NOTE_A2, 8, NOTE_A2, 8, NOTE_A3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_G3, 8, NOTE_A2, 8, NOTE_A2, 8,
+NOTE_A3, -16, NOTE_F3, -16, NOTE_D3, -16, NOTE_A3, -16, NOTE_F3, -16, NOTE_D3, -16, NOTE_C4, -16, NOTE_A3, -16, NOTE_F3, -16, NOTE_A3, -16, NOTE_F3, -16, NOTE_D3, -16,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //33
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //37
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_CS3, 8, NOTE_CS3, 8, NOTE_CS4, 8, NOTE_CS3, 8, NOTE_CS3, 8, NOTE_B3, 8, NOTE_CS3, 8, NOTE_CS3, 8, //41
+NOTE_A3, 8, NOTE_CS3, 8, NOTE_CS3, 8, NOTE_G3, 8, NOTE_CS3, 8, NOTE_CS3, 8, NOTE_GS3, 8, NOTE_A3, 8,
+NOTE_B2, 8, NOTE_B2, 8, NOTE_B3, 8, NOTE_B2, 8, NOTE_B2, 8, NOTE_A3, 8, NOTE_B2, 8, NOTE_B2, 8,
+NOTE_G3, 8, NOTE_B2, 8, NOTE_B2, 8, NOTE_F3, -2,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //45
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_B3, -16, NOTE_G3, -16, NOTE_E3, -16, NOTE_G3, -16, NOTE_B3, -16, NOTE_E4, -16, NOTE_G3, -16, NOTE_B3, -16, NOTE_E4, -16, NOTE_B3, -16, NOTE_G4, -16, NOTE_B4, -16,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //49
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //53
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_FS3, -16, NOTE_DS3, -16, NOTE_B2, -16, NOTE_FS3, -16, NOTE_DS3, -16, NOTE_B2, -16, NOTE_G3, -16, NOTE_D3, -16, NOTE_B2, -16, NOTE_DS4, -16, NOTE_DS3, -16, NOTE_B2, -16,
+
+// -/-
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //57
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //61
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_E4, -16, NOTE_B3, -16, NOTE_G3, -16, NOTE_G4, -16, NOTE_E4, -16, NOTE_G3, -16, NOTE_B3, -16, NOTE_D4, -16, NOTE_E4, -16, NOTE_G4, -16, NOTE_E4, -16, NOTE_G3, -16,  
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //65
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_A2, 8, NOTE_A2, 8, NOTE_A3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_G3, 8, NOTE_A2, 8, NOTE_A2, 8, //69
+NOTE_F3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_DS3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_E3, 8, NOTE_F3, 8,
+NOTE_A2, 8, NOTE_A2, 8, NOTE_A3, 8, NOTE_A2, 8, NOTE_A2, 8, NOTE_G3, 8, NOTE_A2, 8, NOTE_A2, 8,
+NOTE_A3, -16, NOTE_F3, -16, NOTE_D3, -16, NOTE_A3, -16, NOTE_F3, -16, NOTE_D3, -16, NOTE_C4, -16, NOTE_A3, -16, NOTE_F3, -16, NOTE_A3, -16, NOTE_F3, -16, NOTE_D3, -16,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //73
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //77
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //81
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, -2,
+
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8, //73
+NOTE_C3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_AS2, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_B2, 8, NOTE_C3, 8,
+NOTE_E2, 8, NOTE_E2, 8, NOTE_E3, 8, NOTE_E2, 8, NOTE_E2, 8, NOTE_D3, 8, NOTE_E2, 8, NOTE_E2, 8,
+NOTE_B3, -16, NOTE_G3, -16, NOTE_E3, -16, NOTE_B2, -16, NOTE_E3, -16, NOTE_G3, -16, NOTE_C4, -16, NOTE_B3, -16, NOTE_G3, -16, NOTE_B3, -16, NOTE_G3, -16, NOTE_E3, -16,  
+`
+                    }
+                },
+                methods: {
+                    playSound() {
+                        var vm = this
+                        if (!vm.isPlaying) {
+                            vm.isPlaying = true;
+                            var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+                            vm.oscillator = audioCtx.createOscillator();
+                            var gainNode = audioCtx.createGain();
+
+                            vm.oscillator.connect(gainNode);
+                            gainNode.connect(audioCtx.destination);
+                            vm.oscillator.type = vm.types;
+                            vm.oscillator.frequency.value = vm.frequency;
+                            vm.oscillator.start();
+                        }
+                        else {
+                            vm.isPlaying = false;
+                            vm.oscillator.stop();
+                        }
+                    },
+                    playSong() {
+                        var vm = this
+                        if (!vm.isPlaying) {
+                            vm.isPlaying = true;
+
+
+                            var notes = vm.notes.split(",").map(function (v) {
+                                return isNaN(v) ? findNote(v) : parseInt(v.trim(), 10);
+                            });
+
+                            var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+
+                            var playNote = function (x) {
+                                if (!vm.isPlaying) {
+                                    vm.oscillator.stop();
+                                    return; // stop playing.
+                                }
+                                vm.oscillator = audioCtx.createOscillator();
+                                var gainNode = audioCtx.createGain();
+                                vm.oscillator.connect(gainNode);
+                                gainNode.connect(audioCtx.destination);
+                                vm.oscillator.type = vm.types;
+
+
+                                var note = notes[x];
+                                var _wholenote = (60000 * 4) / vm.tempo;
+                                var divider = notes[x + 1];
+                                var noteDuration = 10;
+                                if (divider > 0) {
+                                    // regular note, just proceed
+                                    noteDuration = (_wholenote) / divider;
+                                } else if (divider < 0) {
+                                    // dotted notes are represented with negative durations!!
+                                    noteDuration = (_wholenote) / Math.abs(divider);
+                                    noteDuration *= 1.5; // increases the duration in half for dotted notes
+                                }
+
+                                vm.oscillator.frequency.value = note;
+                                vm.oscillator.start();
+
+                                setTimeout(function () { vm.oscillator.stop(); }, noteDuration * .9); // stop note
+                                if (x + 2 < notes.length - 1) {
+                                    setTimeout(function () { playNote(x + 2); }, noteDuration);
+                                }
+                                else {
+                                    vm.isPlaying = false;
+                                }
+                            };
+                            playNote(0); // start song
+                        }
+                        else {
+                            vm.isPlaying = false;
+                            vm.oscillator.stop();
+                        }
+                    }
+                }
+            }).$mount('#app');
+
+
+            var NOTES_TABLE = {
+                "NOTE_B0": 31,
+                "NOTE_C1": 33,
+                "NOTE_CS1": 35,
+                "NOTE_D1": 37,
+                "NOTE_DS1": 39,
+                "NOTE_E1": 41,
+                "NOTE_F1": 44,
+                "NOTE_FS1": 46,
+                "NOTE_G1": 49,
+                "NOTE_GS1": 52,
+                "NOTE_A1": 55,
+                "NOTE_AS1": 58,
+                "NOTE_B1": 62,
+                "NOTE_C2": 65,
+                "NOTE_CS2": 69,
+                "NOTE_D2": 73,
+                "NOTE_DS2": 78,
+                "NOTE_E2": 82,
+                "NOTE_F2": 87,
+                "NOTE_FS2": 93,
+                "NOTE_G2": 98,
+                "NOTE_GS2": 104,
+                "NOTE_A2": 110,
+                "NOTE_AS2": 117,
+                "NOTE_B2": 123,
+                "NOTE_C3": 131,
+                "NOTE_CS3": 139,
+                "NOTE_D3": 147,
+                "NOTE_DS3": 156,
+                "NOTE_E3": 165,
+                "NOTE_F3": 175,
+                "NOTE_FS3": 185,
+                "NOTE_G3": 196,
+                "NOTE_GS3": 208,
+                "NOTE_A3": 220,
+                "NOTE_AS3": 233,
+                "NOTE_B3": 247,
+                "NOTE_C4": 262,
+                "NOTE_CS4": 277,
+                "NOTE_D4": 294,
+                "NOTE_DS4": 311,
+                "NOTE_E4": 330,
+                "NOTE_F4": 349,
+                "NOTE_FS4": 370,
+                "NOTE_G4": 392,
+                "NOTE_GS4": 415,
+                "NOTE_A4": 440,
+                "NOTE_AS4": 466,
+                "NOTE_B4": 494,
+                "NOTE_C5": 523,
+                "NOTE_CS5": 554,
+                "NOTE_D5": 587,
+                "NOTE_DS5": 622,
+                "NOTE_E5": 659,
+                "NOTE_F5": 698,
+                "NOTE_FS5": 740,
+                "NOTE_G5": 784,
+                "NOTE_GS5": 831,
+                "NOTE_A5": 880,
+                "NOTE_AS5": 932,
+                "NOTE_B5": 988,
+                "NOTE_C6": 1047,
+                "NOTE_CS6": 1109,
+                "NOTE_D6": 1175,
+                "NOTE_DS6": 1245,
+                "NOTE_E6": 1319,
+                "NOTE_F6": 1397,
+                "NOTE_FS6": 1480,
+                "NOTE_G6": 1568,
+                "NOTE_GS6": 1661,
+                "NOTE_A6": 1760,
+                "NOTE_AS6": 1865,
+                "NOTE_B6": 1976,
+                "NOTE_C7": 2093,
+                "NOTE_CS7": 2217,
+                "NOTE_D7": 2349,
+                "NOTE_DS7": 2489,
+                "NOTE_E7": 2637,
+                "NOTE_F7": 2794,
+                "NOTE_FS7": 2960,
+                "NOTE_G7": 3136,
+                "NOTE_GS7": 3322,
+                "NOTE_A7": 3520,
+                "NOTE_AS7": 3729,
+                "NOTE_B7": 3951,
+                "NOTE_C8": 4186,
+                "NOTE_CS8": 4435,
+                "NOTE_D8": 4699,
+                "NOTE_DS8": 4978,
+                "REST": 0,
+            };
+
+            function findNote(v) {
+                v = v.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1').trim();
+                if (!NOTES_TABLE[v])
+                    console.log(v);
+                return NOTES_TABLE[v];
+            }
+        </script>
+    </body>
+</html>
+    
